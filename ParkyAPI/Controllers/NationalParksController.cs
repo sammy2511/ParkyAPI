@@ -39,7 +39,7 @@ namespace ParkyAPI.Controllers
             return Ok(objDto);
         }
 
-        [HttpGet("{nationalParkid:int}")]
+        [HttpGet("{nationalParkid:int}",Name = "GetNationalPark")]
         public IActionResult GetNationalPark(int nationalParkid)
         {
             var obj = _npRepo.GetNationalPark(nationalParkid);
@@ -81,7 +81,46 @@ namespace ParkyAPI.Controllers
                 return StatusCode(500, ModelState);
             }
 
-            return Ok();
+            return CreatedAtRoute("GetNationalPark",new {nationalParkId = nationalParkObj.Id },nationalParkObj);
+        }
+
+        [HttpPatch("{nationalParkid:int}", Name = "UpdateNationalPark")]
+        public IActionResult UpdateNationalPark(int nationalParkId, [FromBody] NationalParkDTO nationalParkDTO)
+        {
+            if (nationalParkDTO == null || nationalParkId!= nationalParkDTO.Id)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var nationalParkObj = _mapper.Map<NationalPark>(nationalParkDTO);
+
+            if (!_npRepo.UpdateNationalPark(nationalParkObj))
+            {
+                ModelState.AddModelError("", $"Something went wrong while updating {nationalParkObj.Name}");
+                return StatusCode(500, ModelState);
+            }
+
+            return NoContent();
+        }
+
+        [HttpDelete("{nationalParkid:int}", Name = "DeleteNationalPark")]
+        public IActionResult DeleteNationalPark(int nationalParkId)
+        {
+          
+            if (!_npRepo.NationalParkExists(nationalParkId))
+            {
+                return NotFound();
+            }
+
+            var obj = _npRepo.GetNationalPark(nationalParkId);
+
+            if (!_npRepo.DeleteNationalPark(obj))
+            {
+                ModelState.AddModelError("", $"Something went wrong while deleting national park {obj.Name}");
+                return StatusCode(500, ModelState);
+            }
+
+            return NoContent();
         }
     }
 }
