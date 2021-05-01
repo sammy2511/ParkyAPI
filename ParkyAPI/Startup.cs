@@ -16,6 +16,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using ParkyAPI.ParkyMapper;
+using System.Reflection;
+using System.IO;
 
 namespace ParkyAPI
 {
@@ -36,6 +38,17 @@ namespace ParkyAPI
 
             services.AddScoped<INationalParkRepository, NationalParkRepository>();
             services.AddAutoMapper(typeof(ParkyMappings));
+            services.AddSwaggerGen(options => {
+                options.SwaggerDoc("ParkyOpenAPISpecs", new Microsoft.OpenApi.Models.OpenApiInfo()
+                {
+                    Title = "Parky API",
+                    Version = "1"
+                });
+                var xmlCommentFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var cmlCommentFullPath = Path.Combine(AppContext.BaseDirectory, xmlCommentFile);
+                options.IncludeXmlComments(cmlCommentFullPath);
+            });
+
             services.AddControllers();
         }
 
@@ -48,6 +61,13 @@ namespace ParkyAPI
             }
 
             app.UseHttpsRedirection();
+
+            app.UseSwagger();
+
+            app.UseSwaggerUI(options => {
+                options.SwaggerEndpoint("/swagger/ParkyOpenAPISpecs/swagger.json", "Parky APIS");
+                options.RoutePrefix = "";
+            });
 
             app.UseRouting();
 
